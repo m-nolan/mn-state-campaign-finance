@@ -19,7 +19,7 @@ def parse_report_txt(report_txt_file):
     received = received_s.group(1) if received_s else ''
     name_s = re.search('Name: (.+)\n',report_text)
     name = name_s.group(1) if name_s else ''
-    donor_regnum_s = re.search('\(Registered Id: (.+)\)',name) # e.g. (Registered Id: 20045)
+    donor_regnum_s = re.search('\(Registered Id: (\d+).*\)',name) # e.g. (Registered Id: 20045), or (20045)
     donor_regnum = donor_regnum_s.group(1) if donor_regnum_s else ''
     unregistered_s = re.search('Unregistered: (.+)',report_text)
     unregistered = unregistered_s.group(1) if unregistered_s else ''
