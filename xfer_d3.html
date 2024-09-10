@@ -22,7 +22,7 @@
         .attr("transform",
               `translate(${margin.left}, ${margin.top})`);
     
-    d3.json("./xfer_data.json").then( function( data ) {
+    d3.json("https://raw.githubusercontent.com/m-nolan/mn-state-campaign-finance/main/xfer_data.json").then( function( data ) {
 
         const fit_force = -400
 
