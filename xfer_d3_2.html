@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <title>d3 Network Diagram Example</title>
+    </head>
+    <body>
+        <div>Thing should go here</div>
+        <script>
+            d3.json("https://raw.githubusercontent.com/m-nolan/mn-state-campaign-finance/main/xfer_data.json", function(d) {
+                //  cribbed this from: https://observablehq.com/@d3/disjoint-force-directed-graph/2
+
+                //  chart dimensions
+                const width = 1000;
+                const height = 1000;
+
+                //  color scale
+                const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+                //  force simulation: create a function to "produce the same result"
+                const links = data.links.map(d => ({...d}));
+                const nodes = data.nodes.map(d => ({...d}));
+
+                //  create a simulation with a few forces to push nodes around
+                const simulation = d3.forceSimulation(nodes)
+                    .force("link", d3.forceLink(links).id(d => d.id))
+                    .force("charge", d3.forceManyBody())
+                    .force("x", d3.forceX())
+                    .force("y", d3.forceY());
+
+                //  make a cute lil SVG container
+                const svg = d3.create("svg")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .attr("viewBox", [-width / 2, -height / 2, width, height])
+                    .attr("style", "max-width: 100%; height: auto;");
+                
+                //  Add a line for each link, and a circle for each node. They'll have color and yada yada
+                const link = svg.append("g")
+                        .attr("stroke", "#fff")
+                        .attr("stroke-width", 1.5)
+                    .selectAll("line")
+                    .data(links)
+                    .join("line")
+                        .attr("stroke-width", d => Math.sqrt(d.value)/100); //  Hey! This changes line width with the value attribute. Let's see how this goes...
+                
+                link.append("title")
+                    .text(d => `\$${d.value}`);
+
+                const node = svg.append("g")
+                        .attr("stroke", "#fff")
+                        .attr("stroke-width", 1.5)
+                    .selectAll("circle")
+                    .data(nodes)
+                    .join("circle")
+                        .attr("r",10)
+                        .attr("fill", "#f00");
+                
+                node.append("title")
+                    .text(d => d.id);
+
+                //  drag show
+                node.call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
+
+                //  set position attr of links, nodes each time the simulation ticks over
+                simulation.on("tick", () => {
+                    link
+                        .attr("x1", d => d.source.x)
+                        .attr("y1", d => d.source.y)
+                        .attr("x2", d => d.target.x)
+                        .attr("y2", d => d.target.y);
+                    
+                    node
+                        .attr("cx", d => d.x)
+                        .attr("cy", d => d.y);
+                });
+
+                //  restarts the simulation when drag starts, fixes the subject position
+                function dragstarted(event) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    event.subject.fx = event.subject.x;
+                    event.subject.fy = event.subject.y;
+                }
+
+                function dragged(event) {
+                    event.subject.fx = event.subject.x;
+                    event.subject.fy = event.subject.y;
+                }
+
+                function dragended(event) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    event.subject.fx = null;
+                    event.subject.fy = null;
+                }
+
+                //  stop the previous simulation when this cell is rerun.
+                invalidation.then(() => simulation.stop());
+
+                return svg.node();
+            });
+        </script>
+    </body>
+</html>
