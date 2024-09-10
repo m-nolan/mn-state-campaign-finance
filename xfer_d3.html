@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v6.js"></script>
+
+<!-- Create a div where the graph will take place -->
+<div id="xfer_network_dataviz"></div>
+
+<script>
+    //  set the dimensions and margins of the graph
+    const margin = {top: 10, right: 30, bottom: 30, left: 40},
+        width = 400 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+    
+    //  append the svg opbject to the body of the page
+    const svg = d3.select("xfer_network_dataviz")
+    .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("G")
+        .attr("transform",
+              `translate(${margin.left}, ${margin.top})`);
+    
+    d3.json("./xfer_data.json").then( function( data ) {
+
+        const fit_force = -400
+
+        //  Initialize these links (...before the nodes?)
+        const link = svg
+            .selectAll("line")
+            .data(data.links)
+            .join("line")
+                .style("stroke", "#aaa")    //  add arrow tips? I want to show direction
+        
+        //  Initialize the nodes
+        const node = svg
+            .selectAll("circle")
+            .data(data.nodes)
+            .join("circle")
+                .attr("r", 20)
+                .style("fill", "#69b3a2")
+        
+        //  List the force applied to the network
+        const simulation = d3.forceSimulation(data.nodes)
+            .force("link", d3.forceLink()
+                    .id(function(d) { return d.id; })
+                    .links(data.links)
+            )
+            .force("charge", d3.forceManyBody().strength(fit_force))    //  push apart from each other
+            .force("center", d3.forceCenter(width / 2, height / 2))     //  pull toward the center
+            .on("end", ticked);
+
+        //  Simulation forward tick
+        function ticked() {
+            link
+                .attr("x1", function(d) { return d.source.x; })
+                .attr("y1", function(d) { return d.source.y; })
+                .attr("x2", function(d) { return d.source.x; })
+                .attr("y2", function(d) { return d.source.y; });
+            
+            node
+                .attr("cx", function(d) { return d.x+6 })
+                .attr("cy", function(d) { return d.y-6 });
+        }
+    });
+</script>
