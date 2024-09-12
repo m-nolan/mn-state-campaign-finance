@@ -5,9 +5,9 @@
         <script src="https://d3js.org/d3.v6.min.js"></script>
     </head>
     <body>
-        <div id="chart">Thing should go here</div>
+        <div id="chart"></div>
         <script>
-            d3.json("https://raw.githubusercontent.com/m-nolan/mn-state-campaign-finance/main/xfer_data.json", function(d) {
+            d3.json("https://raw.githubusercontent.com/m-nolan/mn-state-campaign-finance/main/xfer_data.json").then(function(data) {
                 //  cribbed this from: https://observablehq.com/@d3/disjoint-force-directed-graph/2
 
                 //  chart dimensions
@@ -24,30 +24,28 @@
                 //  create a simulation with a few forces to push nodes around
                 const simulation = d3.forceSimulation(nodes)
                     .force("link", d3.forceLink(links).id(d => d.id))
-                    .force("charge", d3.forceManyBody().strength(-800))
+                    .force("charge", d3.forceManyBody())
                     .force("x", d3.forceX())
-                    .force("y", d3.forceY())
-                    .force("collide", d3.forceCollide(15).iterations(50));
+                    .force("y", d3.forceY());
 
                 //  make a cute lil SVG container
-                const svg = d3.select("#chart")
-                    .append("svg")
-                        .attr("width", width)
-                        .attr("height", height)
-                        .attr("viewBox", [-width / 2, -height / 2, width, height])
-                        .attr("style", "max-width: 100%; height: auto;");
+                const svg = d3.select("#chart").append("svg")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .attr("viewBox", [-width / 2, -height / 2, width, height])
+                    .attr("style", "max-width: 100%; height: auto;");
                 
                 //  Add a line for each link, and a circle for each node. They'll have color and yada yada
                 const link = svg.append("g")
-                        .attr("stroke", "#fff")
-                        .attr("stroke-width", 1.5)
                     .selectAll("line")
                     .data(links)
                     .join("line")
-                        .attr("stroke-width", d => Math.sqrt(d.value)/10); //  Hey! This changes line width with the value attribute. Let's see how this goes...
+                        .attr("stroke", "#999")
+                        .attr("stroke-opacity", 0.6)
+                        .attr("stroke-width", d => Math.sqrt(d.value)/50) //  Hey! This changes line width with the value attribute. Let's see how this goes...
                 
                 link.append("title")
-                    .text(d => `\$${d.value}`);
+                    .text(d => `$${d.value}`);
 
                 const node = svg.append("g")
                         .attr("stroke", "#fff")
@@ -56,10 +54,10 @@
                     .data(nodes)
                     .join("circle")
                         .attr("r",10)
-                        .attr("fill", "#f00");
+                        .attr("fill", d => color(d.group));
                 
                 node.append("title")
-                    .text(d => d.id);
+                    .text(d => d.name);
 
                 //  drag show
                 node.call(d3.drag()
@@ -81,29 +79,23 @@
                 });
 
                 //  restarts the simulation when drag starts, fixes the subject position
-                function dragstarted(event) {
+                function dragstarted(event, d) {
                     if (!event.active) simulation.alphaTarget(0.3).restart();
-                    event.subject.fx = event.subject.x;
-                    event.subject.fy = event.subject.y;
+                    d.fx = d.x;
+                    d.fy = d.y;
                 }
 
-                function dragged(event) {
-                    event.subject.fx = event.subject.x;
-                    event.subject.fy = event.subject.y;
+                function dragged(event, d) {
+                    d.fx = event.x;
+                    d.fy = event.y;
                 }
 
-                function dragended(event) {
+                function dragended(event, d) {
                     if (!event.active) simulation.alphaTarget(0);
-                    event.subject.fx = null;
-                    event.subject.fy = null;
+                    d.fx = null;
+                    d.fy = null;
                 }
 
-                // //  stop the previous simulation when this cell is rerun.
-                // invalidation.then(() => simulation.stop());
-
-                // console.log(svg);
-
-                // return svg.node();
             }).catch(function(error) {
                 console.log("Error loading the data: " + error);
             });
