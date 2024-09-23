@@ -11,7 +11,7 @@
                 //  cribbed this from: https://observablehq.com/@d3/disjoint-force-directed-graph/2
 
                 //  chart dimensions
-                const width = 1000;
+                const width = 1500;
                 const height = 1000;
 
                 //  color scale
@@ -34,6 +34,20 @@
                     .attr("height", height)
                     .attr("viewBox", [-width / 2, -height / 2, width, height])
                     .attr("style", "max-width: 100%; height: auto;");
+
+                svg.append('defs').append('defs')
+                    .append('marker')
+                    .attr('id', 'arrowhead')
+                    .attr("viewBox", "-5 -5 10 10")
+                    .attr('refX', 0)
+                    .attr('refY', 0)
+                    .attr('orient', 'auto')
+                    .attr('markerWidth', 5)
+                    .attr('markerHeight', 5)
+                    .attr('xoverflow','visible')
+                    .append('path')
+                        .attr('d','M 0,-5 L 10 ,0 L 0,5')
+                        .attr('stroke', 'black');
                 
                 //  Add a line for each link, and a circle for each node. They'll have color and yada yada
                 const link = svg.append("g")
@@ -42,28 +56,45 @@
                     .join("line")
                         .attr("stroke", "#999")
                         .attr("stroke-opacity", 0.6)
-                        .attr("stroke-width", d => Math.sqrt(d.value)/50) //  Hey! This changes line width with the value attribute. Let's see how this goes...
+                        // .attr("stroke-width", d => Math.sqrt(d.value)/50)   //  Hey! This changes line width with the value attribute. Let's see how this goes...
+                        .attr('stroke-width',5)
+                        .attr('class','links')
+                        .attr('marker-mid','url(#arrowhead)');
                 
-                link.append("title")
-                    .text(d => `$${d.value}`);
+                link.append('title')
+                    .text(d => `\$${d.value}`);
 
-                const node = svg.append("g")
-                        .attr("stroke", "#fff")
-                        .attr("stroke-width", 1.5)
-                    .selectAll("circle")
+                const nodeContainer = svg.append("g")
+                    .selectAll("g")
                     .data(nodes)
-                    .join("circle")
-                        .attr("r",10)
-                        .attr("fill", d => color(d.group));
-                
-                node.append("title")
-                    .text(d => d.name);
+                    .join("g");
+
+                var node = nodeContainer.append("circle")
+                    .attr("r",10)
+                    .attr("fill","blue");
+
+                var nodeText = nodeContainer.append("text")
+                    .text(d => d.name)
+                        .attr('dx',12)
+                        .attr('dy',-8)
+                        .attr('opacity',0); //  initially invisible, becomes visible on click (hopefully)
 
                 //  drag show
-                node.call(d3.drag()
-                    .on("start", dragstarted)
-                    .on("drag", dragged)
-                    .on("end", dragended));
+                // node.call(d3.drag()
+                //     .on("start", dragstarted)
+                //     .on("drag", dragged)
+                //     .on("end", dragended));
+
+                nodeContainer.selectAll('circle').on('click', function(d){
+                    var active = d.active? false: true;
+                    if (active) {
+                        console.log(`${d.name} active`);
+                    }
+                    else {
+                        console.log(`${d.name} inactive`);
+                    };
+                    d.active = active;
+                })
 
                 //  set position attr of links, nodes each time the simulation ticks over
                 simulation.on("tick", () => {
@@ -73,9 +104,8 @@
                         .attr("x2", d => d.target.x)
                         .attr("y2", d => d.target.y);
                     
-                    node
-                        .attr("cx", d => d.x)
-                        .attr("cy", d => d.y);
+                    nodeContainer
+                        .attr('transform', d => `translate(${d.x},${d.y})`);
                 });
 
                 //  restarts the simulation when drag starts, fixes the subject position
