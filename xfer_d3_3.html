@@ -7,7 +7,7 @@
     <body>
         <div id="chart"></div>
         <script>
-            d3.json("https://raw.githubusercontent.com/m-nolan/mn-state-campaign-finance/main/xfer_data_20000.json").then(function(data) {
+            d3.json("https://raw.githubusercontent.com/m-nolan/mn-state-campaign-finance/main/xfer_data_100000_2024-09.json").then(function(data) {
                 //  cribbed this from: https://observablehq.com/@d3/disjoint-force-directed-graph/2
 
                 //  chart dimensions
@@ -76,8 +76,6 @@
                     .on('click',linkClicked);
 
                 const linkTextBox = linkContainer.append('rect')
-                    // .attr('x', () => d3.select(this.parentNode).attr('x1')/2 + d3.select(this.parentNode).attr('x2')/2)
-                    // .attr('y', () => d3.select(this.parentNode).attr('y1')/2 + d3.select(this.parentNode).attr('y2')/2)
                     .attr('width',50)
                     .attr('height',20)
                     .attr('rx',5)
@@ -183,9 +181,6 @@
                     console.log(event);
                     var active = d.active? false : true;
                     d.active = active;
-
-                    // d.source.active = d.active     //  might need to move the "update element info" to a separate function
-                    // d.target.active = d.active
 
                     link
                         .attr('stroke', d => d.active? linkActiveColor : linkInactiveColor)
