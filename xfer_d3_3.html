@@ -103,7 +103,9 @@
                     .attr("r",10)
                     .attr("fill",nodeInactiveColor)
                     // .attr("opacity",0.6)
-                    .on('click',nodeClicked);
+                    .on('click',nodeClicked)
+                    .on('mouseover',nodeMouseover)
+                    .on('mouseout',nodeMouseout);
 
                 const nodeText = nodeContainer.append("text")
                     .text(d => d.name)
@@ -164,23 +166,44 @@
 
                 function nodeClicked(event, d) {
                     if (event.defaultPrevented) return;
-                    console.log(d);
-                    console.log(event);
-                    var active = d.active? false : true;
-                    d.active = active;
-                    node
-                        .attr('fill', d => d.active? nodeActiveColor : nodeInactiveColor);
-                        // .attr('opacity', d => d.active? 1 : 0.6);
-
-                    nodeText
-                        .attr('opacity', d => d.active? 1 : 0);
-                    
+                    if (d.toggle == null) {    //  hasn't been clicked on yet
+                        d.toggle = true;
+                    } else {
+                        d.toggle = d.toggle? false : true;
+                    };
+                    d.active = d.toggle;
+                    nodeUpdate(d);
                     d3.select(this.parentNode).raise();
                 }
 
+                function nodeMouseover(event, d) {
+                    if (d.toggle) {
+                        // do nothing
+                    } else {
+                        d.active = true;
+                        nodeUpdate(d);
+                        d3.select(this.parentNode).raise();
+                    };
+                }
+
+                function nodeMouseout(event, d) {
+                    if (d.toggle) {
+                        // do nothing
+                    } else {
+                        d.active = false;
+                        nodeUpdate(d);
+                    };
+                }
+
+                function nodeUpdate(d) {
+                    node
+                        .attr('fill', d => d.active? nodeActiveColor : nodeInactiveColor);
+
+                    nodeText
+                        .attr('opacity', d => d.active? 1 : 0);
+                }
+
                 function linkClicked(event, d) {
-                    console.log(d);
-                    console.log(event);
                     var active = d.active? false : true;
                     d.active = active;
 
@@ -198,7 +221,7 @@
                         .attr('opacity',d => d.active? 1 : 0);
 
                     d3.select(this.parentNode).raise();
-                }
+                };
 
                 //  restarts the simulation when drag starts, fixes the subject position
                 function dragstarted(event, d) {
